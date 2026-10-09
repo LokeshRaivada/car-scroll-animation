@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scroll Car Animation | ITZFIZZ</title>
+<style>
+  :root {
+    --bg: #d3d3d3;
+    --road: #1f1f1f;
+    --green: #44db7c;
+    --ink: #111;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); font-family: "Helvetica Neue", Arial, sans-serif; color: var(--ink); overflow-x: hidden; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 620px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(16px, 6vh, 56px);
+  }
+
+  /* Band: dark road underneath, green "revealed" layer on top */
+  .band {
+    position: relative;
+    height: clamp(120px, 29vh, 250px);
+    background: var(--road);
+    overflow: hidden;
+  }
+  .band__green {
+    position: absolute;
+    inset: 0;
+    background: var(--green);
+    clip-path: inset(0 100% 0 0);     /* updated from scroll progress */
+    will-change: clip-path;
+    display: flex;
+    align-items: center;
+    padding-left: 5vw;
+  }
+  .headline {
+    display: flex;
+    white-space: nowrap;
+    font-weight: 800;
+    font-size: clamp(48px, 9.4vw, 190px);
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  .headline .ch { display: inline-block; will-change: transform, opacity; }
+  .headline .sp { width: 0.35em; }
+
+  .car {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 96%;
+    aspect-ratio: 520 / 250;
+    transform: translate3d(0, -50%, 0);
+    will-change: transform;
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,.45));
+  }
+  .car svg { width: 100%; height: 100%; display: block; }
+
+  /* ---------- Stats ---------- */
+  .stats {
+    display: flex;
+    gap: 2.4vw;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .stats--top { margin-left: 49.5vw; }
+  .stats--bottom { margin-left: 43vw; }
+
+  .card {
+    width: 18.7vw;
+    min-width: 200px;
+    height: clamp(120px, 21.5vh, 190px);
+    padding: 0 1.9vw;
+    display: flex; flex-direction: column; justify-content: center;
+    border-radius: 14px;
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+  .card b { display: block; font-size: clamp(36px, 3.9vw, 76px); line-height: 1; margin-bottom: 12px; }
+  .card span { font-size: clamp(13px, 1.15vw, 22px); }
+  .c-lime  { background: #dff54f; }
+  .c-dark  { background: #333; color: #fff; }
+  .c-blue  { background: #6ec9ff; }
+  .c-orange{ background: #fb7326; }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 18px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px; letter-spacing: .3em; text-transform: uppercase; opacity: 0;
+  }
+
+  .after {
+    min-height: 70vh;
+    display: grid; place-items: center;
+    background: var(--ink); color: #fff;
+    font-size: clamp(24px, 4vw, 56px); font-weight: 700; letter-spacing: .1em;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 800px) {
+    .stats { gap: 14px; }
+    .stats--top, .stats--bottom { margin-left: 0; justify-content: center; }
+    .card { width: 44vw; min-width: 0; padding: 0 3vw; }
+    .headline { letter-spacing: 0.02em; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card { opacity: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero" id="hero">
+  <div class="stats stats--top">
+    <div class="card c-lime"  data-scroll="0.18"><b>58%</b><span>Increase in pick up point use</span></div>
+    <div class="card c-dark"  data-scroll="0.50"><b>27%</b><span>Increase in pick up point use</span></div>
+  </div>
+
+  <div class="band" id="band">
+    <div class="band__green" id="green">
+      <h1 class="headline" id="headline" aria-label="Welcome Itzfizz">WELCOME ITZFIZZ</h1>
+    </div>
+
+    <div class="car" id="car" aria-hidden="true">
+      <!-- Top-down orange supercar (inline SVG, faces right) -->
+      <svg viewBox="0 0 520 250" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff9a2e"/><stop offset=".5" stop-color="#f58220"/><stop offset="1" stop-color="#d9690f"/>
+          </linearGradient>
+          <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#4a4a4a"/><stop offset="1" stop-color="#181818"/>
+          </linearGradient>
+        </defs>
+        <!-- rear wing -->
+        <rect x="6" y="36" width="30" height="178" rx="8" fill="#1a1a1a"/>
+        <!-- body -->
+        <path d="M30 125 C30 62 70 30 150 26 L330 20 C410 18 478 52 504 104 C512 120 512 130 504 146 C478 198 410 232 330 230 L150 224 C70 220 30 188 30 125Z" fill="url(#body)"/>
+        <!-- side intakes -->
+        <path d="M180 34 L300 28 L290 44 L190 48Z" fill="#1b1b1b" opacity=".85"/>
+        <path d="M180 216 L300 222 L290 206 L190 202Z" fill="#1b1b1b" opacity=".85"/>
+        <!-- engine cover vents -->
+        <rect x="60" y="92" width="62" height="66" rx="10" fill="#222"/>
+        <g stroke="#555" stroke-width="3"><path d="M72 98v54M84 98v54M96 98v54M108 98v54"/></g>
+        <!-- cabin -->
+        <path d="M140 66 L322 70 C350 76 362 100 362 125 C362 150 350 174 322 180 L140 184 C126 160 126 90 140 66Z" fill="#2a2a2a"/>
+        <path d="M235 76 L320 78 C342 84 350 104 350 125 C350 146 342 166 320 172 L235 174Z" fill="url(#glass)"/>
+        <!-- roof highlight -->
+        <path d="M150 80 L228 82 L228 168 L150 170Z" fill="#3a3a3a" opacity=".7"/>
+        <!-- hood line + headlights -->
+        <path d="M372 92 C420 96 458 108 480 125 C458 142 420 154 372 158" fill="none" stroke="#b85a0c" stroke-width="3"/>
+        <path d="M455 62 L488 84" stroke="#1b1b1b" stroke-width="8" stroke-linecap="round"/>
+        <path d="M455 188 L488 166" stroke="#1b1b1b" stroke-width="8" stroke-linecap="round"/>
+        <!-- mirrors -->
+        <path d="M312 20 l16 -10 l10 6 l-12 12z" fill="#1b1b1b"/>
+        <path d="M312 230 l16 10 l10 -6 l-12 -12z" fill="#1b1b1b"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stats stats--bottom">
+    <div class="card c-blue"   data-scroll="0.34"><b>23%</b><span>Decreased in customer phone calls</span></div>
+    <div class="card c-orange" data-scroll="0.66"><b>40%</b><span>Decreased in customer phone calls</span></div>
+  </div>
+
+  <div class="scroll-hint" id="hint">Scroll</div>
+</section>
+
+<section class="after">THANK YOU</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  const hero     = document.getElementById("hero");
+  const car      = document.getElementById("car");
+  const green    = document.getElementById("green");
+  const band     = document.getElementById("band");
+  const headline = document.getElementById("headline");
+
+  /* ---- Split headline into letters (kept accessible via aria-label) ---- */
+  headline.innerHTML = [...headline.textContent].map(c =>
+    c === " " ? '<span class="sp"></span>' : `<span class="ch">${c}</span>`
+  ).join("");
+  const letters = headline.querySelectorAll(".ch");
+
+  /* ---- Cached measurements (re-read only on refresh, never per scroll) ---- */
+  let bandW, carW, startX, endX;
+  const measure = () => {
+    bandW  = band.clientWidth;
+    carW   = car.offsetWidth;
+    startX = bandW * 0.02;          // car begins near the left edge
+    endX   = bandW + carW * 0.1;    // exits fully past the right edge
+  };
+  measure();
+
+  const setCarX  = gsap.quickSetter(car, "x", "px");
+  const render = (p) => {
+    const x = startX + (endX - startX) * p;
+    setCarX(x);
+    // green is revealed up to the car's rear -> text appears as the car passes
+    const revealed = Math.min(bandW, x + carW * 0.2);
+    green.style.clipPath = `inset(0 ${bandW - revealed}px 0 0)`;
+  };
+  render(0);
+
+  /* ---- 1. Intro animation on load ---- */
+  const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+  intro
+    .from(letters, { yPercent: 60, opacity: 0, duration: 0.9, stagger: 0.05 })
+    .from(car, { opacity: 0, duration: 1 }, 0.1)
+    .to("#hint", { opacity: 0.6, duration: 0.6 }, 1.4);
+
+  /* ---- 2. Scroll-driven animation (scrubbed, smoothed) ---- */
+  const state = { p: 0 };
+  const tl = gsap.timeline({
+    defaults: { ease: "none" },
+    scrollTrigger: {
+      trigger: hero,
+      start: "top top",
+      end: "+=2600",
+      pin: true,
+      scrub: 1.2,               // 1.2s catch-up = eased, fluid motion
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onRefreshInit: measure,
+      onUpdate: self => { if (self.progress > 0.02) gsap.to("#hint", { opacity: 0, overwrite: true, duration: .3 }); }
+    }
+  });
+
+  tl.to(state, { p: 1, duration: 1, onUpdate: () => render(state.p) }, 0);
+
+  // Extra stat cards pop in at given scroll progress
+  document.querySelectorAll("[data-scroll]").forEach(el => {
+    tl.fromTo(el,
+      { opacity: 0, y: 50, scale: 0.94 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.14, ease: "power2.out" },
+      parseFloat(el.dataset.scroll));
+  });
+
+  window.addEventListener("resize", () => ScrollTrigger.refresh());
+</script>
+</body>
+</html>
